@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>typr.js - parsing test</title>
+
+
+    <link rel="stylesheet" href="style.css">
+
+    <!-- woff2 woff2/brotli decompression -->
+    <script src="https://unpkg.com/wawoff2@2.0.1/build/decompress_binding.js"></script>
+
+    <!-- Typr -->
+    <script src="../src/Typr.js" defer></script>
+    <script src="../src/Typr.U.js" defer></script>
+
+
+
+</head>
+
+<body>
+
+    <h1>Parse Woff2</h1>
+    <div id="cnt"></div>
+    <h3>SVG output</h3>
+    <textarea  id="markup" readonly></textarea>
+
+    <h3>Glyph names</h3>
+    <textarea  id="glyphNames" readonly></textarea>
+
+
+    <script>
+
+        // load Noto Sans VF
+        let fontUrl = "https://fonts.gstatic.com/s/notosans/v37/o-0IIpQlx3QUlC5A4PNb5z5Ba_2c7A.woff2";
+        let text = "Hámbürğệfôñş";
+        let fontSize = 100;
+
+        /**
+         * test rendering
+         */
+        (async () => {
+            let font = await loadFont(fontUrl);
+
+            // get font metrics for scaling factors
+            let { unitsPerEm } = font.head;
+            let {ascender, descender} = font.hhea;
+            let scale = fontSize / unitsPerEm;
+            let scaleY = -scale //flip for SVG
+
+            let shapes = Typr.U.shape(font, text);
+            let pathT = Typr.U.shapeToPath(font, shapes);
+
+
+            // get glyphnames
+            let glyphNamesArr = shapes.map(shape=>{
+                let glyphId = shape.g;
+                let glyphName = font.post.names[glyphId] 
+                return glyphName 
+             })
+            glyphNames.value = glyphNamesArr.join(' ');
+
+
+            // flip Y
+            let translateX = 0;
+            let translateY = fontSize;
+            path = scalePath(pathT, scale, scaleY, translateX, translateY);
+
+            //get stringified path
+            let d = Typr.U.pathToSVG(pathT);
+            
+
+            console.log('font', font);
+            console.log('shapes', shapes);
+
+
+            // render svg
+            let w = +shapes.map(s=>{ return s.ax*scale}).reduce((partialSum, a) => partialSum + a, 0).toFixed(3);
+            let h = +(Math.abs(descender - ascender)*scale).toFixed(3);
+            let svg = 
+            `<svg viewBox="0 0 ${w} ${h}">\n<path id="path" d="${d}" />\n</svg>`;
+
+            // append
+            cnt.insertAdjacentHTML('beforeend', svg)
+
+            // show markup
+            markup.value = svg
+            
+        })();
+
+
+
+        /**
+         * font loading helper
+         * deploys wawoff2 wasm build
+         * to decompress woff2
+         */
+        async function loadFont(fontUrl) {
+            // load font as a buffer
+            let buffer = await (await fetch(fontUrl)).arrayBuffer();
+
+            // check font file extension
+            let ext = fontUrl.split(".").slice(-1)[0];
+
+            // decompress buffer for woff2
+            if (ext === "woff2") {
+                buffer = Uint8Array.from(Module.decompress(buffer)).buffer;
+            }
+
+            // ready to parse font
+            let font = Typr.parse(buffer)[0];
+            return font;
+        }
+
+
+        /**
+         * flip path helper
+         * for SVG/canvas coordinate system
+         */
+        function scalePath(
+            path,
+            scaleX = 1,
+            scaleY = 1,
+            translateX = 0,
+            translateY = 0
+        ) {
+            path.crds.forEach((com, c) => {
+                if (c % 2 === 0) {
+                    path.crds[c] = path.crds[c] * scaleX + translateX;
+                } else {
+                    path.crds[c] = path.crds[c] * scaleY + translateY;
+                }
+            });
+            return path;
+        }
+
+        /**
+         * adjust viewBox
+         */
+        function adjustViewBox(svg) {
+            let bb = svg.getBBox();
+            let [x, y, width, height] = [bb.x, bb.y, bb.width, bb.height].map((val) => {
+                return +val.toFixed(1);
+            });
+            svg.setAttribute("viewBox", [x, y, width, height].join(" "));
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>
