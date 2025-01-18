@@ -1,4 +1,5 @@
-# Typr.js  
+# Typr.js – Fork1
+This forks is experimental and aims to add new features to the main fork. 
 
 [LIVE DEMO](https://photopea.github.io/Typr.js) Typr.js is a Javascript parser and utility for working with fonts (TTF, OTF, TTC, WOFF). It is an alternative to [opentype.js](https://github.com/nodebox/opentype.js). It is the main text engine for [Photopea image editor](https://www.photopea.com).
 
