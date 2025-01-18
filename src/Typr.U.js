@@ -395,7 +395,7 @@ Typr["U"] = function() {
 					}
 					else {
 						if(prOnCurve) P.MoveTo(p,  xs[pr],     ys[pr]        );
-						else          P.MoveTo(p, Math.floor((xs[pr]+x)*0.5), Math.floor((ys[pr]+y)*0.5)   ); 
+						else          P.MoveTo(p, (xs[pr]+x)*0.5, (ys[pr]+y)*0.5 ); 
 					}
 				}
 				if(onCurve) {
@@ -403,7 +403,7 @@ Typr["U"] = function() {
 				}
 				else {
 					if(nxOnCurve) P.qCurveTo(p, x, y, xs[nx], ys[nx]); 
-					else          P.qCurveTo(p, x, y, Math.floor((x+xs[nx])*0.5), Math.floor((y+ys[nx])*0.5) ); 
+					else          P.qCurveTo(p, x, y, (x+xs[nx])*0.5, (y+ys[nx])*0.5); 
 				}
 			}
 			P.ClosePath(p);
