@@ -1,0 +1,25 @@
+{
+    "name": "typr.js-f1",
+    "version": "0.0.1",
+    "description": "Typr.js - process fonts in Javascript - fork",
+    "main": "src/Typr.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/herrstrietzel/Typr.js.git"
+    },
+    "keywords": [
+      "OpenType",
+      "Font parsing",
+      "Font to SVG",
+    ],
+    "author": "herrstrietzel | Main fork: photopea",
+    "license": "MIT",
+    "bugs": {
+      "url": "https://github.com/herrstrietzel/Typr.js/issues"
+    },
+    "homepage": "https://github.com/herrstrietzel/Typr.js#readme"
+  }
+  
