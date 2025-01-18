@@ -1437,20 +1437,69 @@ Typr["T"].OS2 = {
 	}
 }
 
+/**
+ * Fork: new post items
+ */
 Typr["T"].post = {
-	parseTab : function(data, offset, length)
-	{
+	parseTab: function (data, offset, length) {
 		var bin = Typr["B"];
 		var obj = {};
-		
-		obj["version"]            = bin.readFixed(data, offset);  offset+=4;
-		obj["italicAngle"]        = bin.readFixed(data, offset);  offset+=4;
-		obj["underlinePosition"]  = bin.readShort(data, offset);  offset+=2;
-		obj["underlineThickness"] = bin.readShort(data, offset);  offset+=2;
 
+		obj["version"] = bin.readFixed(data, offset); offset += 4;
+		obj["italicAngle"] = bin.readFixed(data, offset); offset += 4;
+		obj["underlinePosition"] = bin.readShort(data, offset); offset += 2;
+		obj["underlineThickness"] = bin.readShort(data, offset); offset += 2;
+
+
+		/**
+		 * Add post table items
+		 * like name records - 
+		 * provides glyph id to name mapping
+		 */
+		obj["isFixedPitch"] = bin.readUint(data, offset); offset += 4;
+		obj["minMemType42"] = bin.readUint(data, offset); offset += 4;
+		obj["maxMemType42"] = bin.readUint(data, offset); offset += 4;
+		obj["minMemType1"] = bin.readUint(data, offset); offset += 4;
+		obj["maxMemType1"] = bin.readUint(data, offset); offset += 4;
+
+
+		// standard name records
+		var standardNames = '.notdef .null nonmarkingreturn space exclam quotedbl numbersign dollar percent ampersand quotesingle parenleft parenright asterisk plus comma hyphen period slash zero one two three four five six seven eight nine colon semicolon less equal greater question at A B C D E F G H I J K L M N O P Q R S T U V W X Y Z bracketleft backslash bracketright asciicircum underscore grave a b c d e f g h i j k l m n o p q r s t u v w x y z braceleft bar braceright asciitilde Adieresis Aring Ccedilla Eacute Ntilde Odieresis Udieresis aacute agrave acircumflex adieresis atilde aring ccedilla eacute egrave ecircumflex edieresis iacute igrave icircumflex idieresis ntilde oacute ograve ocircumflex odieresis otilde uacute ugrave ucircumflex udieresis dagger degree cent sterling section bullet paragraph germandbls registered copyright trademark acute dieresis notequal AE Oslash infinity plusminus lessequal greaterequal yen mu partialdiff summation product pi integral ordfeminine ordmasculine Omega ae oslash questiondown exclamdown logicalnot radical florin approxequal Delta guillemotleft guillemotright ellipsis nonbreakingspace Agrave Atilde Otilde OE oe endash emdash quotedblleft quotedblright quoteleft quoteright divide lozenge ydieresis Ydieresis fraction currency guilsinglleft guilsinglright fi fl daggerdbl periodcentered quotesinglbase quotedblbase perthousand Acircumflex Ecircumflex Aacute Edieresis Egrave Iacute Icircumflex Idieresis Igrave Oacute Ocircumflex apple Ograve Uacute Ucircumflex Ugrave dotlessi circumflex tilde macron breve dotaccent ring cedilla hungarumlaut ogonek caron Lslash lslash Scaron scaron Zcaron zcaron brokenbar Eth eth Yacute yacute Thorn thorn minus multiply onesuperior twosuperior threesuperior onehalf onequarter threequarters franc Gbreve gbreve Idotaccent Scedilla scedilla Cacute cacute Ccaron ccaron dcroat'.split(' ');
+
+
+		if (obj["version"] === 2.0) {
+			obj["numGlyphs"] = bin.readUshort(data, offset); offset += 2;
+			obj["glyphNameIndex"] = [];
+			for (var i = 0; i < obj["numGlyphs"]; i++) {
+				obj["glyphNameIndex"].push(bin.readUshort(data, offset)); offset += 2;
+			}
+
+			// Calculate the maximum byte length for names
+			var namesOffset = offset;
+			var namesLength = length - (namesOffset - offset); // Remaining bytes in the `post` table
+			var namesStr = bin.readASCII(data, offset, namesLength);
+
+			// split name string
+			var namesArr = namesStr.split(/\n| /g).map(val => { return val.split(/[^\x20-\x7E]+/) }).flat().filter(Boolean);
+
+
+			// merge with standard names
+			obj["names"] = obj["glyphNameIndex"].map(index => {
+				if (index < standardNames.length) {
+					// Use standard names for indices < 258
+					return standardNames[index]; 
+				} else {
+					// Adjust for custom names
+					var customIndex = index - standardNames.length; 
+					 // Use fallback if custom name is missing
+					return namesArr[customIndex] || `.glyph${index}`;
+				}
+			});
+		}
 		return obj;
 	}
 };
+
 Typr["T"].SVG = {
 	parseTab : function(data, offset, length)
 	{
