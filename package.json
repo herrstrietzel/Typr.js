@@ -13,7 +13,7 @@
     "keywords": [
       "OpenType",
       "Font parsing",
-      "Font to SVG",
+      "Font to SVG"
     ],
     "author": "herrstrietzel | Main fork: photopea",
     "license": "MIT",
